@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.log
+data/
+wandb/
+.git/
+.gitignore
+test_client.html
+*.wav
+*.png

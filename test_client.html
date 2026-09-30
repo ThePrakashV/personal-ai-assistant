@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test Client</title>
+</head>
+<body>
+    <h2>Personal AI Assistant — WebSocket Test</h2>
+    <p>Session ID: <span id="sessionDisplay">connecting...</span></p>
+    <input type="text" id="msgInput" placeholder="Type your message" size="50">
+    <button onclick="sendMessage()">Send</button>
+    <pre id="output" style="border:1px solid #ccc; padding:10px; min-height:100px; white-space:pre-wrap;"></pre>
+
+    <script>
+        let storedSessionId = localStorage.getItem("session_id") || "";
+        const wsUrl = storedSessionId
+            ? `ws://localhost:8000/ws/chat?session_id=${storedSessionId}`
+            : `ws://localhost:8000/ws/chat`;
+
+        const socket = new WebSocket(wsUrl);
+        const output = document.getElementById("output");
+        const sessionDisplay = document.getElementById("sessionDisplay");
+
+        socket.onopen = () => {
+            output.textContent += "[Connected]\n";
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "session") {
+                localStorage.setItem("session_id", data.content);
+                sessionDisplay.textContent = data.content;
+            } else if (data.type === "chunk") {
+                output.textContent += data.content;
+            } else if (data.type === "done") {
+                output.textContent += "\n[Done]\n\n";
+            } else if (data.type === "error") {
+                output.textContent += "\n[Error: " + data.content + "]\n\n";
+            }
+        };
+
+        socket.onclose = () => {
+            output.textContent += "\n[Disconnected]\n";
+        };
+
+        function sendMessage() {
+            const input = document.getElementById("msgInput");
+            output.textContent += "\n> " + input.value + "\n";
+            socket.send(input.value);
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
